@@ -10,6 +10,7 @@
 
 // Constants
 const double pi = 3.14159;
+double const deg2rad = 0.01745329;
 const double earthRadius = 6.371e6;
 const double worldPop = 7.93 * pow(10,9);
 
@@ -68,6 +69,86 @@ class Input {
         const std::string _fileName;
         std::vector<float> _scenarioParameters;
         float _diameter, _density, _strength, _alphaCoeff, _velocity, _angleInc, _azimuth, _luminousEff, _ablation;
+};
+
+
+class PopGrid {
+
+    public:
+
+        PopGrid(const std::string fileName): _fileName(fileName) {
+                readFile();
+        }
+
+        /**
+         * @brief Method to read the binary file and store the information about densities
+         */
+        void readFile(){
+
+            std::ifstream gridFile(_fileName, std::ios::binary);
+
+            // Lecture of the file - saving of properties and data
+            if (gridFile.is_open()){
+                gridFile.read((char *)&nRows, sizeof(nRows));
+                gridFile.read((char *)&nCol, sizeof(nCol));
+                gridFile.read((char *)&xlCorner, sizeof(xlCorner));
+                gridFile.read((char *)&ylCorner, sizeof(ylCorner));
+                gridFile.read((char *)&arcLengthDeg, sizeof(arcLengthDeg));
+                gridFile.read((char *)&noDat, sizeof(noDat));
+                yuCorner = ylCorner + nRows*arcLengthDeg;
+                vSize = nRows*nCol;
+                maxcellsidekm = earthRadius*arcLengthDeg*deg2rad;
+                maxcelldiagkm = maxcellsidekm*sqrt(2);
+
+                popCount.reserve(vSize);
+                for (int i=0; i< vSize; i++) {
+                    
+                    gridFile.read((char *)&dum,sizeof(dum));
+                    popCount[i] = dum;
+                    
+                }
+                gridFile.close();
+            }
+            else{
+                std::cout << "Population file read failed!" << std::endl;
+            }
+            return;
+        }
+
+        /**
+         * @brief Method to find the density given the latitude and longitude
+         * 
+         * @param[in] latitude in degrees
+         * @param[in] longtitude in degrees
+         * @param[out] density in #people/km^2
+         */
+        double getCellPop(double latitude, double longitude){
+
+            // Retrive the indices on the table
+            int i = int((yuCorner - latitude)/arcLengthDeg);
+            int j = int((longitude - xlCorner)/arcLengthDeg);
+
+            // Verify that the longitude is in the bounds, otherwise correct it
+            if (j<0){
+                j = nCol + j;
+            }else if(j >= nCol){
+                j = j - nCol;
+            }
+
+            // Find the density
+            if (popCount[i*nCol + j] < 0){
+                return 0;
+            } else {
+                return popCount[i * nCol + j];
+            }
+        }
+
+        // Atributes
+        const std::string _fileName;
+        int nRows, nCol, xlCorner, ylCorner, yuCorner, noDat, vSize;
+        double arcLengthDeg, maxcellsidekm, maxcelldiagkm, dum;
+        std::vector<double> popCount;
+
 };
 
 
@@ -203,6 +284,18 @@ int main() {
     ClassificationModel classificationModel(folderName);
     RegressionModel regressionModel(folderName);
 
+    // Instantiate the population grid vector
+    const std::string popGridFile = "../pop-grids/popgrid-2020-2pt5arcmin.bin";
+    PopGrid popGrid(popGridFile);
+
+    // Define some interesting coordinates
+    double latitude = 48.8647;
+    double longitude = 2.3490;
+
+    // Find a specific density (ony once)
+    double population = popGrid.getCellPop(latitude, longitude);
+    std::cout << "The population in this cell is: " << population << std::endl;
+    
     // Predict the probability of any sort of damage
     float threatProbability = classificationModel._evaluateOutput(data);
 
