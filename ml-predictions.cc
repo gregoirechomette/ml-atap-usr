@@ -8,6 +8,8 @@
 #include "./lib/cppflow/include/cppflow/ops.h"
 #include "./lib/cppflow/include/cppflow/model.h"
 
+#define WITH_LOCAL_DENSITIES
+
 // Constants
 const double pi = 3.14159;
 double const deg2rad = 0.01745329;
@@ -138,7 +140,7 @@ class PopGrid {
          * 
          * @param[in] latitude in degrees
          * @param[in] longtitude in degrees
-         * @param[out] density in #people/km^2
+         * @param[out] popCount number of people in the grid cell
          */
 
         double getCellPop(double latitude, double longitude){
@@ -363,7 +365,7 @@ class RegressionModel : public Model{
          * @param data Input object containing real-scale asteroid properties and trajectories
          * @return float radius of the damaged area for a given level (e.g. BlastRad1)
          */
-        
+
         float _evaluateOutput(Input data){
 
             // Normalize the input data
@@ -389,6 +391,9 @@ class RegressionModel : public Model{
 
 int main() {
 
+    // Boolean to state if local densities of populations should be used
+    bool localDensities = true;
+
     // Instantiate the input objects with the scenario properties
     const std::string propertiesFile = "../input.dat";
     Input data(propertiesFile);
@@ -398,17 +403,15 @@ int main() {
     ClassificationModel classificationModel(folderName);
     RegressionModel regressionModel(folderName);
 
+    #if defined(WITH_LOCAL_DENSITIES)
     // Instantiate the population grid vector
     const std::string popGridFile = "../pop-grids/popgrid-2020-2pt5arcmin.bin";
     PopGrid popGrid(popGridFile);
 
-    // Define some interesting coordinates
+    // Define some dummy coordinates (Paris)
     double latitude = 48.8647;
     double longitude = 2.3490;
-
-    // Find a specific density (ony once)
-    double population = popGrid.getCellPop(latitude, longitude);
-    std::cout << "The population in this cell is: " << population << std::endl;
+    #endif
     
     // Predict the probability of any sort of damage
     double threatProbability = classificationModel._evaluateOutput(data);
@@ -418,19 +421,15 @@ int main() {
     int peopleAffected;
     if  (threatProbability > 0.5){
         damageRadius = regressionModel._evaluateOutput(data);
-        // peopleAffected = 0.1 * pi * damageRadius * damageRadius * (worldPop/(4 * pi * earthRadius * earthRadius));
+        #if defined(WITH_LOCAL_DENSITIES)
         peopleAffected = popGrid.getAffectedPop(latitude, longitude, damageRadius);
+        #else
+        peopleAffected = 0.1 * pi * damageRadius * damageRadius * (worldPop/(4 * pi * earthRadius * earthRadius));
+        #endif
         std::cout << "The number of people affected is: " << peopleAffected << std::endl;
+        
     } else {
         std::cout << "The number of people affected is 0" << std::endl;
-    }
-
-    // Test: other predictions using the same model objects (e.g. increase diameter by 10m)
-    for (int i=0; i<5; i++){
-        data._scenarioParameters[0] += 10; 
-        damageRadius = regressionModel._evaluateOutput(data);
-        peopleAffected = 0.1 * pi * damageRadius * damageRadius * (worldPop/(4 * pi * earthRadius * earthRadius));
-        std::cout << "The number of people affected is: " << peopleAffected << std::endl;
     }
 
     return 0;
