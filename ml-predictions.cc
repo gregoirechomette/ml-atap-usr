@@ -143,6 +143,35 @@ class PopGrid {
             }
         }
 
+        double getDistance(double lat1, double lon1, double lat2, double lon2){
+
+            double dTheta, dLat, dLon;
+            dLat = deg2rad*(lat1 - lat2);
+            dLon = deg2rad * (lon1 - lon2);
+            dTheta = 2.0*asin(sqrt(sin(0.5*dLat)*sin(0.5*dLat) + cos(lat1*deg2rad)*cos(lat2*deg2rad)*sin(dLon*0.5)*sin(dLon*0.5)));
+            return dTheta*earthRadius;
+        }
+
+        double getAffectedPop(double latitude, double longitude, double damagedRadius){
+
+            // Number of cells to check on the latitude direction
+            int cellLatNumber = 2 * asin(0.5 * damagedRadius / earthRadius) / arcLengthDeg + 1;
+            int cellLonNumber = 2 * asin(0.5 * damagedRadius / earthRadius) / arcLengthDeg / cos(deg2rad * latitude) + 1;
+
+            double distanceComp;
+            double totalAffPop = 0.0;
+            for (int i=-cellLatNumber; i <=cellLatNumber; i++){
+                for (int j=-cellLonNumber; j<=cellLonNumber; j++){
+                    distanceComp = getDistance(latitude, longitude, latitude + i * arcLengthDeg, longitude + j * arcLengthDeg);
+                    if (distanceComp < damagedRadius){
+                        totalAffPop += getCellPop(latitude + i * arcLengthDeg, longitude + j * arcLengthDeg);
+                    }
+                }
+            }
+            return totalAffPop;
+
+        }
+
         // Atributes
         const std::string _fileName;
         int nRows, nCol, xlCorner, ylCorner, yuCorner, noDat, vSize;
@@ -297,14 +326,15 @@ int main() {
     std::cout << "The population in this cell is: " << population << std::endl;
     
     // Predict the probability of any sort of damage
-    float threatProbability = classificationModel._evaluateOutput(data);
+    double threatProbability = classificationModel._evaluateOutput(data);
 
     // Prediction of ground damage radius for dangerous scenarios
-    float damageRadius;
+    double damageRadius;
     int peopleAffected;
     if  (threatProbability > 0.5){
         damageRadius = regressionModel._evaluateOutput(data);
-        peopleAffected = 0.1 * pi * damageRadius * damageRadius * (worldPop/(4 * pi * earthRadius * earthRadius));
+        // peopleAffected = 0.1 * pi * damageRadius * damageRadius * (worldPop/(4 * pi * earthRadius * earthRadius));
+        peopleAffected = popGrid.getAffectedPop(latitude, longitude, damageRadius);
         std::cout << "The number of people affected is: " << peopleAffected << std::endl;
     } else {
         std::cout << "The number of people affected is 0" << std::endl;
