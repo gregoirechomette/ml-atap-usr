@@ -19,13 +19,23 @@ class Input {
 
     public:
 
+        /**
+         * @brief Constructor of a new Input object
+         * 
+         * @param fileName path and name of the .dat file to be read
+         */
+
         Input(const std::string fileName): _fileName(fileName) {
             _readFile();
         }
 
     private:
 
-        // Method to read the dat file containing scenario parameters
+        /**
+         * @brief Method to read and store the dat file containing scenario parameters
+         * 
+         */
+        
         void _readFile() {
             // Try to open filename
             std::ifstream source(_fileName.data());
@@ -76,13 +86,21 @@ class PopGrid {
 
     public:
 
+        /**
+         * @brief Constructor of a new Pop Grid object
+         * 
+         * @param fileName path and name of the binary file to be read
+         */
+
         PopGrid(const std::string fileName): _fileName(fileName) {
                 readFile();
         }
 
         /**
          * @brief Method to read the binary file and store the information about densities
+         * 
          */
+
         void readFile(){
 
             std::ifstream gridFile(_fileName, std::ios::binary);
@@ -122,6 +140,7 @@ class PopGrid {
          * @param[in] longtitude in degrees
          * @param[out] density in #people/km^2
          */
+
         double getCellPop(double latitude, double longitude){
 
             // Retrive the indices on the table
@@ -143,6 +162,16 @@ class PopGrid {
             }
         }
 
+        /**
+         * @brief Get the distance between two points in the Earth based on their lat and long
+         * 
+         * @param lat1 latidude of the first point [degrees]
+         * @param lon1 longitude of the first point [in degrees]
+         * @param lat2 latidude of the second point [in degrees]
+         * @param lon2 longitude of the second point [in degrees]
+         * @return double distance [meters]
+         */
+
         double getDistance(double lat1, double lon1, double lat2, double lon2){
 
             double dTheta, dLat, dLon;
@@ -151,6 +180,15 @@ class PopGrid {
             dTheta = 2.0*asin(sqrt(sin(0.5*dLat)*sin(0.5*dLat) + cos(lat1*deg2rad)*cos(lat2*deg2rad)*sin(dLon*0.5)*sin(dLon*0.5)));
             return dTheta*earthRadius;
         }
+
+        /**
+         * @brief Get the total affected population given the radius of a circle, together with its lat and long
+         * 
+         * @param latitude latitude of the center of the circle [degrees]
+         * @param longitude longitude of the center of the circle [degrees]
+         * @param damagedRadius radius of the circular damaged area [meters]
+         * @return double number of people affected [-]
+         */
 
         double getAffectedPop(double latitude, double longitude, double damagedRadius){
 
@@ -185,12 +223,22 @@ class Model {
 
     public:
 
+        /**
+         * @brief Constructor of a new Model object
+         * 
+         * @param folderName path of the folder containing the models and scaling parameters
+         */
+
         Model(const std::string folderName): 
         _folderName(folderName) {
             _readingScalingParameters();
         }
 
-        // Method to read csv file containing scaling parameters
+        /**
+         * @brief Method to read and store the scaling parameters
+         * 
+         */
+
         void _readingScalingParameters(){
 
             // Open the file and declare reading variables
@@ -216,6 +264,13 @@ class Model {
             return;
         }
 
+        /**
+         * @brief Method to normalize the input parameters before feeding the neural network
+         * 
+         * @param data Input object containing real-scale asteroid properties and trajectories
+         * @return std::vector<float> vector containing normalized asteroid properties and trajectories
+         */
+
         std::vector<float> _normalizeInputs(Input data){
             std::vector<float> normalizedInputs (9);
             for (int i=0; i<9; i++){
@@ -225,6 +280,13 @@ class Model {
             }
             return normalizedInputs;
         }
+
+        /**
+         * @brief Method to rescale the neural network output to real-life casualties
+         * 
+         * @param damageNormalized output of the neural network
+         * @return float real-life casualty radius from the asteroid(s) impacts(s)
+         */
 
         float _rescaleOutput(float damageNormalized){
             float mean = std::stof(_scalingParameters[1][10]);
@@ -249,10 +311,21 @@ class ClassificationModel : public Model{
 
     public:
 
+        /**
+         * @brief Constructor of a new Classification Model object
+         * 
+         * @param folderName name of the folder containing the saved and trained TF model
+         */
+
         ClassificationModel(const std::string folderName): Model(folderName),
         _model(cppflow::model(folderName + "Classification_model")) {}
 
-        // Evaluate scenario damage from data
+        /**
+         * @brief Method to evaluate the propability of casuatlies on the Earth
+         * 
+         * @param data Input object containing real-scale asteroid properties and trajectories
+         * @return float probability of casualty (0=no damage; 1=damage) on the Earth for a given level (e.g. BlastRad1)
+         */
         float _evaluateOutput(Input data){
 
             // Rescale the input data
@@ -275,10 +348,22 @@ class RegressionModel : public Model{
 
     public:
 
+        /**
+         * @brief Constructor of a new Regression Model object
+         * 
+         * @param folderName name of the folder containing the saved and trained TF model
+         */
+
         RegressionModel(const std::string folderName): Model(folderName),
         _model(cppflow::model(folderName + "Regression_model")) {}
 
-        // Evaluate scenario damage from data
+        /**
+         * @brief Method to evaluate the extent of casuatlies on the Earth
+         * 
+         * @param data Input object containing real-scale asteroid properties and trajectories
+         * @return float radius of the damaged area for a given level (e.g. BlastRad1)
+         */
+        
         float _evaluateOutput(Input data){
 
             // Normalize the input data
