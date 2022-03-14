@@ -12,7 +12,7 @@
 
 // Constants
 const double pi = 3.14159;
-double const deg2rad = 0.01745329;
+const double deg2rad = 0.01745329;
 const double earthRadius = 6.371e6;
 const double worldPop = 7.93 * pow(10,9);
 
@@ -28,7 +28,7 @@ class Input {
          */
 
         Input(const std::string fileName): _fileName(fileName) {
-            _readFile();
+            readFile();
         }
 
     private:
@@ -38,7 +38,7 @@ class Input {
          * 
          */
         
-        void _readFile() {
+        void readFile() {
             // Try to open filename
             std::ifstream source(_fileName.data());
             if (source.fail()) {
@@ -233,7 +233,7 @@ class Model {
 
         Model(const std::string folderName): 
         _folderName(folderName) {
-            _readingScalingParameters();
+            readingScalingParameters();
         }
 
         /**
@@ -241,7 +241,7 @@ class Model {
          * 
          */
 
-        void _readingScalingParameters(){
+        void readingScalingParameters(){
 
             // Open the file and declare reading variables
             std::string scalingFileName = _folderName + "/Scaling_parameters.csv";
@@ -273,7 +273,7 @@ class Model {
          * @return std::vector<float> vector containing normalized asteroid properties and trajectories
          */
 
-        std::vector<float> _normalizeInputs(Input data){
+        std::vector<float> normalizeInputs(Input data){
             std::vector<float> normalizedInputs (9);
             for (int i=0; i<9; i++){
                 float mean = std::stof(_scalingParameters[1][i+1]);
@@ -290,7 +290,7 @@ class Model {
          * @return float real-life casualty radius from the asteroid(s) impacts(s)
          */
 
-        float _rescaleOutput(float damageNormalized){
+        float rescaleOutput(float damageNormalized){
             float mean = std::stof(_scalingParameters[1][10]);
             float std = std::stof(_scalingParameters[2][10]);
             return (damageNormalized * std) + mean;
@@ -328,10 +328,10 @@ class ClassificationModel : public Model{
          * @param data Input object containing real-scale asteroid properties and trajectories
          * @return float probability of casualty (0=no damage; 1=damage) on the Earth for a given level (e.g. BlastRad1)
          */
-        float _evaluateOutput(Input data){
+        float evaluateOutput(Input data){
 
             // Rescale the input data
-            std::vector<float> normalizedInputs = _normalizeInputs(data);
+            std::vector<float> normalizedInputs = normalizeInputs(data);
 
             // Give the input the good format and feed it to the NN
             auto scenarioTensorFlow = cppflow::tensor(normalizedInputs, {1,9});
@@ -366,10 +366,10 @@ class RegressionModel : public Model{
          * @return float radius of the damaged area for a given level (e.g. BlastRad1)
          */
 
-        float _evaluateOutput(Input data){
+        float evaluateOutput(Input data){
 
             // Normalize the input data
-            std::vector<float> normalizedInputs = _normalizeInputs(data);
+            std::vector<float> normalizedInputs = normalizeInputs(data);
 
             // Give the input the good format and feed it to the NN
             auto scenarioTensorFlow = cppflow::tensor(normalizedInputs, {1,9});
@@ -379,7 +379,7 @@ class RegressionModel : public Model{
                                     {"StatefulPartitionedCall:0", "StatefulPartitionedCall:1"});
 
             // Rescale and return the output data
-            return _rescaleOutput(damageNormalized[0].get_data<float>()[0]);
+            return rescaleOutput(damageNormalized[0].get_data<float>()[0]);
         }
 
     public:
@@ -390,9 +390,6 @@ class RegressionModel : public Model{
 
 
 int main() {
-
-    // Boolean to state if local densities of populations should be used
-    bool localDensities = true;
 
     // Instantiate the input objects with the scenario properties
     const std::string propertiesFile = "../input.dat";
@@ -414,13 +411,14 @@ int main() {
     #endif
     
     // Predict the probability of any sort of damage
-    double threatProbability = classificationModel._evaluateOutput(data);
+    double threatProbability = classificationModel.evaluateOutput(data);
 
     // Prediction of ground damage radius for dangerous scenarios
     double damageRadius;
     int peopleAffected;
     if  (threatProbability > 0.5){
-        damageRadius = regressionModel._evaluateOutput(data);
+        damageRadius = regressionModel.evaluateOutput(data);
+        
         #if defined(WITH_LOCAL_DENSITIES)
         peopleAffected = popGrid.getAffectedPop(latitude, longitude, damageRadius);
         #else
