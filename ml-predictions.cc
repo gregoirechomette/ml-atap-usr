@@ -8,7 +8,6 @@
 #include "./lib/cppflow/include/cppflow/ops.h"
 #include "./lib/cppflow/include/cppflow/model.h"
 
-#define WITH_LOCAL_DENSITIES
 
 // Constants
 const double pi = 3.14159;
@@ -400,7 +399,6 @@ int main() {
     ClassificationModel classificationModel(folderName);
     RegressionModel regressionModel(folderName);
 
-    #if defined(WITH_LOCAL_DENSITIES)
     // Instantiate the population grid vector
     const std::string popGridFile = "../pop-grids/popgrid-2020-2pt5arcmin.bin";
     PopGrid popGrid(popGridFile);
@@ -408,7 +406,6 @@ int main() {
     // Define some dummy coordinates (Paris)
     double latitude = 48.8647;
     double longitude = 2.3490;
-    #endif
     
     // Predict the probability of any sort of damage
     double threatProbability = classificationModel.evaluateOutput(data);
@@ -418,14 +415,8 @@ int main() {
     int peopleAffected;
     if  (threatProbability > 0.5){
         damageRadius = regressionModel.evaluateOutput(data);
-        
-        #if defined(WITH_LOCAL_DENSITIES)
-        peopleAffected = popGrid.getAffectedPop(latitude, longitude, damageRadius);
-        #else
-        peopleAffected = 0.1 * pi * damageRadius * damageRadius * (worldPop/(4 * pi * earthRadius * earthRadius));
-        #endif
-        std::cout << "The number of people affected is: " << peopleAffected << std::endl;
-        
+        peopleAffected = 0.1 * popGrid.getAffectedPop(latitude, longitude, damageRadius);
+        std::cout << "The number of people affected is: " << peopleAffected << std::endl;  
     } else {
         std::cout << "The number of people affected is 0" << std::endl;
     }
