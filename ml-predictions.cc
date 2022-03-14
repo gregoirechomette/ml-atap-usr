@@ -38,6 +38,10 @@ class Input {
          */
         
         void readFile() {
+
+            // Prepare the vector   
+            std::vector<float> scenarioParameters(9);
+
             // Try to open filename
             std::ifstream source(_fileName.data());
             if (source.fail()) {
@@ -46,29 +50,30 @@ class Input {
             return;
             }
             // actually read file
-            source >> _diameter; 
+            source >> scenarioParameters[0]; 
             source.ignore(std::numeric_limits<std::streamsize>::max(),'\n');
-            source >> _density;    
+            source >> scenarioParameters[1];    
             source.ignore(std::numeric_limits<std::streamsize>::max(),'\n');
-            source >> _strength;
+            source >> scenarioParameters[2];
             source.ignore(std::numeric_limits<std::streamsize>::max(),'\n');
-            source >> _alphaCoeff;
+            source >> scenarioParameters[3];
             source.ignore(std::numeric_limits<std::streamsize>::max(),'\n');
-            source >> _velocity; 
+            source >> scenarioParameters[4]; 
             source.ignore(std::numeric_limits<std::streamsize>::max(),'\n');
-            source >> _angleInc;
+            source >> scenarioParameters[5];
             source.ignore(std::numeric_limits<std::streamsize>::max(),'\n');
-            source >> _azimuth;
+            source >> scenarioParameters[6];
             source.ignore(std::numeric_limits<std::streamsize>::max(),'\n');
-            source >> _luminousEff; 
+            source >> scenarioParameters[7]; 
             source.ignore(std::numeric_limits<std::streamsize>::max(),'\n');
-            source >> _ablation; 
+            source >> scenarioParameters[8]; 
+            source.ignore(std::numeric_limits<std::streamsize>::max(),'\n');
+            source >> _latitude; 
+            source.ignore(std::numeric_limits<std::streamsize>::max(),'\n');
+            source >> _longitude; 
             source.ignore(std::numeric_limits<std::streamsize>::max(),'\n');
             source.close();
 
-            // Create a vector to contain all the parameters
-            std::vector<float> scenarioParameters;
-            scenarioParameters = {_diameter, _density, _strength, _alphaCoeff, _velocity, _angleInc, _azimuth, _luminousEff, _ablation};
             _scenarioParameters = scenarioParameters;
 
             // all done
@@ -77,9 +82,9 @@ class Input {
 
     public:
         // Declare attributes
+        double _latitude, _longitude;
         const std::string _fileName;
         std::vector<float> _scenarioParameters;
-        float _diameter, _density, _strength, _alphaCoeff, _velocity, _angleInc, _azimuth, _luminousEff, _ablation;
 };
 
 
@@ -402,10 +407,6 @@ int main() {
     // Instantiate the population grid vector
     const std::string popGridFile = "../pop-grids/popgrid-2020-2pt5arcmin.bin";
     PopGrid popGrid(popGridFile);
-
-    // Define some dummy coordinates (Paris)
-    double latitude = 48.8647;
-    double longitude = 2.3490;
     
     // Predict the probability of any sort of damage
     double threatProbability = classificationModel.evaluateOutput(data);
@@ -415,7 +416,7 @@ int main() {
     int peopleAffected;
     if  (threatProbability > 0.5){
         damageRadius = regressionModel.evaluateOutput(data);
-        peopleAffected = 0.1 * popGrid.getAffectedPop(latitude, longitude, damageRadius);
+        peopleAffected = 0.1 * popGrid.getAffectedPop(data._latitude, data._longitude, damageRadius);
         std::cout << "The number of people affected is: " << peopleAffected << std::endl;  
     } else {
         std::cout << "The number of people affected is 0" << std::endl;
