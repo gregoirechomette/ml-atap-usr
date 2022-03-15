@@ -28,8 +28,11 @@ tar -C <path-to-ml-atap-usr>/lib/libtensorflow2 -xf ~/Downloads/libtensorflow.ta
 ```
 If the *TensorFlow C API* is installed in another location, the ```CMakeLists.txt``` configuration file must be modified.
 
-### 4) Install the trained TensorFlow ML models
-These models are not uploaded here, please reach out directly to me (gregoire.a.chomette@nasa.gov) if you are interested, or see the repository [ml-atap-dv](https://github.com/gregoirechomette/ml-atap-dv) to create and train these models. 
+### 4) Obtain the trained TensorFlow ML models
+These models are not uploaded here, please reach out directly to me (gregoire.a.chomette@nasa.gov) if you are interested, or see the repository [ml-atap-dv](https://github.com/gregoirechomette/ml-atap-dv) to create and train these models. Then, the path to the model of interest needs to be updated with the variable ``` folderName ```.
+
+### 5) Obtain the grid population file
+The world population data is available [online](https://sedac.ciesin.columbia.edu/data/collection/gpw-v4). Alternatively, you can reach out directly to me to receive a binary file containing the world population data. Then, the path to the population file needs to be updated with the variable ``` popGridFile ```.
 
 
 ## How to use it
@@ -46,6 +49,8 @@ The asteroid properties and trajectories can be modified in the ```input.dat``` 
 180             Azimuth [degrees]
 0.003           Luminous Efficiency [-]
 0.000000001     Ablation [kg m^-3]
+48.8647         Latitude [degrees]
+2.3490          Longitude [degrees]
 ```
 
 
@@ -65,3 +70,10 @@ cd ml-atap-usr/build
 ./ml-predictions
 ```
 
+## Key run time results
+
+Instantiate the TensorFlow C model: ~10^-1 seconds  
+Evaluate the damage radius for one scenario: ~10^-4 seconds
+
+Instantiate the population grid vector: ~ 10^0 seconds  
+Evaluate the population affected for one scenario: ~ 10^-6 seconds
