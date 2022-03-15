@@ -4,6 +4,8 @@
 #include <sstream>
 #include <math.h>
 #include <stdio.h>
+#include <ctime>
+#include <time.h>
 
 #include "./lib/cppflow/include/cppflow/ops.h"
 #include "./lib/cppflow/include/cppflow/model.h"
@@ -99,7 +101,7 @@ class PopGrid {
          */
 
         PopGrid(const std::string fileName): _fileName(fileName) {
-                readFile();
+            readFile();
         }
 
         /**
