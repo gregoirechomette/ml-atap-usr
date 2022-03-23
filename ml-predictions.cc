@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <ctime>
 #include <time.h>
+#include <algorithm>
 
 #include "./lib/cppflow/include/cppflow/ops.h"
 #include "./lib/cppflow/include/cppflow/model.h"
@@ -234,7 +235,7 @@ class ManualModel{
          * 
          */
 
-        Model(const std::string folderName):
+        ManualModel(const std::string folderName):
         _folderName(folderName)
         {
             readWeightsFile(), 
@@ -490,7 +491,7 @@ class ManualModel{
         // Folder path for the neural network model
         const std::string _folderName;
         // Number of units of the different layers (including input and output)
-        std::vector<int> _layers = {2,3,4,6,1};
+        std::vector<int> _layers = {9,64,128,256,1};
         // Intermediate pre-activation results of the neural network
         std::vector<double> _z1, _z2, _z3, _z4;
         // Intermediate post-activation results of the neural network
@@ -704,6 +705,14 @@ int main() {
     } else {
         std::cout << "The number of people affected is 0" << std::endl;
     }
+
+    // Instantiate the neural network model
+    ManualModel manualModel(folderName);
+
+    // Find the damage radius
+    double damageRadiusbis = std::max(manualModel.evaluateOutput(data),0.0);
+    std::cout << "The radius with the implemented method is: " << damageRadiusbis << std::endl;
+
 
     return 0;
 }
