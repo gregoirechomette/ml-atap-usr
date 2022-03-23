@@ -226,6 +226,287 @@ class PopGrid {
 
 };
 
+class ManualModel{
+
+    public:
+        /**
+         * @brief Construct the Model object
+         * 
+         */
+
+        Model(const std::string folderName):
+        _folderName(folderName)
+        {
+            readWeightsFile(), 
+            readingScalingParameters();
+        }
+
+        /**
+         * @brief Method to read the weights and store the three layers
+         * 
+         */
+        void readWeightsFile(){
+
+            // Open the file and declare reading variables
+            std::fstream file (_folderName + "/Regression_model/weights.csv", std::ios::in);
+            std::vector<double> row;
+            std::string line, word;
+
+            // Read the file and store data
+            if(file.is_open()){
+                while(getline(file, line)){
+                    row.clear();
+                    std::stringstream str(line);
+                    while(getline(str, word, ',')){
+                        row.push_back(std::stod(word));
+                    }
+                    _weights.push_back(row);
+                }
+            }
+            else{
+                std::cout << "Error: Cannot open weights file "  << std::endl;
+            }
+            return;
+        }
+
+        /**
+         * @brief Method to read and store the scaling parameters
+         * 
+         */
+
+        void readingScalingParameters(){
+
+            // Open the file and declare reading variables
+            std::string scalingFileName = _folderName + "/Scaling_parameters.csv";
+            std::fstream file (scalingFileName, std::ios::in);
+            std::vector<std::string> row;
+            std::string line, word;
+
+            // Read the file and store data
+            if(file.is_open()){
+                while(getline(file, line)){
+                    row.clear();
+                    std::stringstream str(line);
+                    while(getline(str, word, ',')){
+                        row.push_back(word);
+                    }
+                    _scalingParameters.push_back(row);
+                }
+            }
+            else{
+                std::cout << "Error: Cannot open parameter scaling parameter file "  << std::endl;
+            }
+            return;
+        }
+
+        /**
+         * @brief Method to normalize the input parameters before feeding the neural network
+         * 
+         * @param data Input object containing real-scale asteroid properties and trajectories
+         * @return std::vector<float> vector containing normalized asteroid properties and trajectories
+         */
+
+        std::vector<double> normalizeInputs(Input data){
+            std::vector<double> normalizedInputs (9);
+            for (int i=0; i<9; i++){
+                double mean = std::stof(_scalingParameters[1][i+1]);
+                double std = std::stof(_scalingParameters[2][i+1]);
+                normalizedInputs[i] = (data._scenarioParameters[i] - mean)/ (std);
+            }
+            return normalizedInputs;
+        }
+
+        /**
+         * @brief Method to rescale the neural network output to real-life casualties
+         * 
+         * @param damageNormalized output of the neural network
+         * @return float real-life casualty radius from the asteroid(s) impacts(s)
+         */
+
+        double rescaleOutput(double damageNormalized){
+            double mean = std::stof(_scalingParameters[1][10]);
+            double std = std::stof(_scalingParameters[2][10]);
+            return (damageNormalized * std) + mean;
+        }
+
+
+        /**
+         * @brief Method to compute A^Tx = b
+         * 
+         * @param A matrix stored in a vector of size (mA x nA), row-major-ordered
+         * @param x vector of size (mB x 1)
+         * @param mA number of rows of matrix A
+         * @param nA number of columns of matrix A
+         * @return A^Tx
+         */
+        
+        std::vector<double> matrixTransposedVectorMultiplication(std::vector<double> A, std::vector<double> x, size_t mA, size_t nA){
+            std::vector<double> output(nA, 0.0);
+            for (int j=0; j<nA; j++){
+                for (int i=0; i<mA; i++){
+                    output[j] += A[i * nA + j] * x[i];
+                }
+            }
+            return output;
+        }
+
+        /**
+         * @brief Method to compute Ax = b
+         * 
+         * @param A matrix stored in a vector of size (mA x nA), row-major-ordered
+         * @param x vector of size (mB x 1)
+         * @param mA number of rows of matrix A
+         * @param nA number of columns of matrix A
+         * @return Ax
+         */
+
+        std::vector<double> matrixVectorMultiplication(std::vector<double> A, std::vector<double> x, size_t mA, size_t nA){
+            std::vector<double> output(mA, 0.0);
+            for (int i=0; i<mA; i++){
+                for (int j=0; j<nA; j++){
+                    output[i] += A[i * nA + j] * x[j];
+                }
+            }
+            return output;
+        }
+
+        /**
+         * @brief Method for elementwise multiplication between two vectors
+         * 
+         * @param a First vector
+         * @param b Second vector
+         * @return vector containing a[i] * b[i]
+         */
+
+        std::vector<double> vectorsElementwiseMultiplication(std::vector<double> a, std::vector<double> b){
+            std::vector<double> output(a.size(), 0.0);
+            for (int i=0; i<a.size(); i++){
+                output[i] = a[i] * b[i];
+            }
+            return output;
+        }
+
+        /**
+         * @brief Method for elementwise addition between two  vectors
+         * 
+         * @param a First vector
+         * @param b Second vector
+         * @return vector containing a[i] + b[i]
+         */
+
+        std::vector<double> vectorsAddition(std::vector<double> a, std::vector<double> b){
+            for (int i=0; i<a.size(); i++){
+                a[i] += b[i];
+            }
+            return a;
+        }
+
+        /**
+         * @brief Method to compute the elementwise max(a,0)
+         * 
+         * @param a Vector
+         * @return vector containing max(a[i],0)
+         */
+
+        std::vector<double> rectifiedLinearUnit(std::vector<double> a){
+            for (int i=0; i<a.size(); i++){
+                if(a[i] < 0){
+                    a[i] = 0;
+                }
+            }
+            return a;
+        }
+
+        /**
+         * @brief Method to compute the elementwise derivative of max(a,0)
+         * 
+         * @param a Vector
+         * @return vector containing the derivative of max(a[i],0)
+         */
+
+        std::vector<double> derRectifiedLinearUnit(std::vector<double> a){
+            for (int i=0; i<a.size(); i++){
+                if (a[i] < 0){
+                    a[i] = 0;
+                }else{
+                    a[i] = 1;
+                }
+            }
+            return a;
+        }
+
+        /**
+         * @brief Method to infer the output of a neural network containing 4 layers
+         * 
+         * @param input vector fed to the neural network
+         * @return output vector of the neural network
+         */
+
+        std::vector<double> forwardPropagation(std::vector<double> input){
+
+            _z1 = vectorsAddition(matrixTransposedVectorMultiplication(_weights[0], input, _layers[0], _layers[1]), _weights[1]);
+            _a1 = rectifiedLinearUnit(_z1);
+            _z2 = vectorsAddition(matrixTransposedVectorMultiplication(_weights[2], _a1, _layers[1], _layers[2]), _weights[3]);
+            _a2 = rectifiedLinearUnit(_z2);
+            _z3 = vectorsAddition(matrixTransposedVectorMultiplication(_weights[4], _a2, _layers[2], _layers[3]), _weights[5]);
+            _a3 = rectifiedLinearUnit(_z3);
+            _z4 = vectorsAddition(matrixTransposedVectorMultiplication(_weights[6], _a3, _layers[3], _layers[4]), _weights[7]);
+            return _z4;
+        }
+
+        double evaluateOutput(Input data){
+
+            // Normalize the input data
+            std::vector<double> normalizedInputs = normalizeInputs(data);
+
+            // Call fhe forward propagation method
+            double damageNormalized = forwardPropagation(normalizedInputs)[0];
+
+            // Rescale and return the output data
+            return rescaleOutput(damageNormalized);
+        }
+
+        /**
+         * @brief Method to compute the derivative of the ouput of a neural network w.r.t the inputs
+         * 
+         * @return derivatives of the outputs with respect to the inputs
+         */
+
+        std::vector<double> backPropagation(){
+            _dZ4dZ3 = vectorsElementwiseMultiplication(derRectifiedLinearUnit(_z3), _weights[6]);
+            _dZ4dA2 = matrixVectorMultiplication(_weights[4], _dZ4dZ3, _layers[2], _layers[3]);
+            _dZ4dZ2 = vectorsElementwiseMultiplication(derRectifiedLinearUnit(_z2), _dZ4dA2);
+            _dZ4dA1 = matrixVectorMultiplication(_weights[2], _dZ4dZ2, _layers[1], _layers[2]);
+            _dZ4dZ1 = vectorsElementwiseMultiplication(derRectifiedLinearUnit(_z1), _dZ4dA1);
+            _dZ4dA0 = matrixVectorMultiplication(_weights[0], _dZ4dZ1, _layers[0], _layers[1]);
+            return _dZ4dA0;
+        }
+
+        /**
+         * @brief Attributes of the model
+         * 
+         */
+
+        // Folder path for the neural network model
+        const std::string _folderName;
+        // Number of units of the different layers (including input and output)
+        std::vector<int> _layers = {2,3,4,6,1};
+        // Intermediate pre-activation results of the neural network
+        std::vector<double> _z1, _z2, _z3, _z4;
+        // Intermediate post-activation results of the neural network
+        std::vector<double> _a1, _a2, _a3;
+        // Intermediate derivatives 
+        std::vector<double> _dZ4dZ3, _dZ4dA2, _dZ4dZ2, _dZ4dA1, _dZ4dZ1, _dZ4dA0;
+        // Vector of vectors containing all the weights of the neural network
+        std::vector<std::vector<double>> _weights;
+        // const std::string _folderName;
+        std::vector<float> _scenarioParameters;
+        std::vector<float> _normalizedScenarioParameters;
+        std::vector<std::vector<std::string>> _scalingParameters;
+};
+
+
+
 
 class Model {
 
