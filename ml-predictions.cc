@@ -227,7 +227,7 @@ class PopGrid {
 
 };
 
-class ManualModel{
+class Model{
 
     public:
         /**
@@ -235,7 +235,7 @@ class ManualModel{
          * 
          */
 
-        ManualModel(const std::string folderName):
+        Model(const std::string folderName):
         _folderName(folderName)
         {
             readWeightsFile(), 
@@ -508,175 +508,6 @@ class ManualModel{
 
 
 
-
-class Model {
-
-    public:
-
-        /**
-         * @brief Constructor of a new Model object
-         * 
-         * @param folderName path of the folder containing the models and scaling parameters
-         */
-
-        Model(const std::string folderName): 
-        _folderName(folderName) {
-            readingScalingParameters();
-        }
-
-        /**
-         * @brief Method to read and store the scaling parameters
-         * 
-         */
-
-        void readingScalingParameters(){
-
-            // Open the file and declare reading variables
-            std::string scalingFileName = _folderName + "/Scaling_parameters.csv";
-            std::fstream file (scalingFileName, std::ios::in);
-            std::vector<std::string> row;
-            std::string line, word;
-
-            // Read the file and store data
-            if(file.is_open()){
-                while(getline(file, line)){
-                    row.clear();
-                    std::stringstream str(line);
-                    while(getline(str, word, ',')){
-                        row.push_back(word);
-                    }
-                    _scalingParameters.push_back(row);
-                }
-            }
-            else{
-                std::cout << "Error: Cannot open parameter scaling parameter file "  << std::endl;
-            }
-            return;
-        }
-
-        /**
-         * @brief Method to normalize the input parameters before feeding the neural network
-         * 
-         * @param data Input object containing real-scale asteroid properties and trajectories
-         * @return std::vector<float> vector containing normalized asteroid properties and trajectories
-         */
-
-        std::vector<float> normalizeInputs(Input data){
-            std::vector<float> normalizedInputs (9);
-            for (int i=0; i<9; i++){
-                float mean = std::stof(_scalingParameters[1][i+1]);
-                float std = std::stof(_scalingParameters[2][i+1]);
-                normalizedInputs[i] = (data._scenarioParameters[i] - mean)/ (std);
-            }
-            return normalizedInputs;
-        }
-
-        /**
-         * @brief Method to rescale the neural network output to real-life casualties
-         * 
-         * @param damageNormalized output of the neural network
-         * @return float real-life casualty radius from the asteroid(s) impacts(s)
-         */
-
-        float rescaleOutput(float damageNormalized){
-            float mean = std::stof(_scalingParameters[1][10]);
-            float std = std::stof(_scalingParameters[2][10]);
-            return (damageNormalized * std) + mean;
-        }
-
-
-    public:
-
-        // Declare attributes
-        const std::string _folderName;
-        std::vector<float> _scenarioParameters;
-        std::vector<float> _normalizedScenarioParameters;
-        std::vector<std::vector<std::string>> _scalingParameters;
-
-};
-
-
-
-class ClassificationModel : public Model{
-
-    public:
-
-        /**
-         * @brief Constructor of a new Classification Model object
-         * 
-         * @param folderName name of the folder containing the saved and trained TF model
-         */
-
-        ClassificationModel(const std::string folderName): Model(folderName),
-        _model(cppflow::model(folderName + "Classification_model")) {}
-
-        /**
-         * @brief Method to evaluate the propability of casuatlies on the Earth
-         * 
-         * @param data Input object containing real-scale asteroid properties and trajectories
-         * @return float probability of casualty (0=no damage; 1=damage) on the Earth for a given level (e.g. BlastRad1)
-         */
-        float evaluateOutput(Input data){
-
-            // Rescale the input data
-            std::vector<float> normalizedInputs = normalizeInputs(data);
-
-            // Give the input the good format and feed it to the NN
-            auto scenarioTensorFlow = cppflow::tensor(normalizedInputs, {1,9});
-            auto threatProbability = _model({{"serving_default_input1:0", scenarioTensorFlow}}, 
-                                                            {"StatefulPartitionedCall:0"});
-            return threatProbability[0].get_data<float>()[0];
-        }
-
-    public:
-        cppflow::model _model;
-        const std::string _folderName;
-        
-};
-
-class RegressionModel : public Model{
-
-    public:
-
-        /**
-         * @brief Constructor of a new Regression Model object
-         * 
-         * @param folderName name of the folder containing the saved and trained TF model
-         */
-
-        RegressionModel(const std::string folderName): Model(folderName),
-        _model(cppflow::model(folderName + "Regression_model")) {}
-
-        /**
-         * @brief Method to evaluate the extent of casuatlies on the Earth
-         * 
-         * @param data Input object containing real-scale asteroid properties and trajectories
-         * @return float radius of the damaged area for a given level (e.g. BlastRad1)
-         */
-
-        float evaluateOutput(Input data){
-
-            // Normalize the input data
-            std::vector<float> normalizedInputs = normalizeInputs(data);
-
-            // Give the input the good format and feed it to the NN
-            auto scenarioTensorFlow = cppflow::tensor(normalizedInputs, {1,9});
-            auto damageNormalized = _model({{"serving_default_input1:0", scenarioTensorFlow}, 
-                                    {"serving_default_input2:0", cppflow::fill({1, 1}, -1.0f)}, 
-                                    {"serving_default_input3:0", cppflow::fill({1, 1}, -1.0f)}}, 
-                                    {"StatefulPartitionedCall:0", "StatefulPartitionedCall:1"});
-
-            // Rescale and return the output data
-            return rescaleOutput(damageNormalized[0].get_data<float>()[0]);
-        }
-
-    public:
-        cppflow::model _model;
-        const std::string _folderName;       
-};
-
-
-
 int main() {
 
     // Instantiate the input objects with the scenario properties
@@ -685,29 +516,13 @@ int main() {
 
     // Instantiate the classifiction and regression models
     const std::string folderName = "../models/BlastRad1/";
-    ClassificationModel classificationModel(folderName);
-    RegressionModel regressionModel(folderName);
 
     // Instantiate the population grid vector
     const std::string popGridFile = "../pop-grids/popgrid-2020-2pt5arcmin.bin";
     PopGrid popGrid(popGridFile);
-    
-    // Predict the probability of any sort of damage
-    double threatProbability = classificationModel.evaluateOutput(data);
-
-    // Prediction of ground damage radius for dangerous scenarios
-    double damageRadius;
-    int peopleAffected;
-    if  (threatProbability > 0.5){
-        damageRadius = regressionModel.evaluateOutput(data);
-        peopleAffected = 0.1 * popGrid.getAffectedPop(data._latitude, data._longitude, damageRadius);
-        std::cout << "The number of people affected is: " << peopleAffected << std::endl;  
-    } else {
-        std::cout << "The number of people affected is 0" << std::endl;
-    }
 
     // Instantiate the neural network model
-    ManualModel manualModel(folderName);
+    Model manualModel(folderName);
 
     // Find the damage radius
     double damageRadiusbis = std::max(manualModel.evaluateOutput(data),0.0);
