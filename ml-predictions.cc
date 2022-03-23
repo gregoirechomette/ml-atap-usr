@@ -308,7 +308,7 @@ class Model{
          */
 
         std::vector<double> normalizeInputs(Input data){
-            std::vector<double> normalizedInputs (9);
+            std::vector<double> normalizedInputs(9);
             for (int i=0; i<9; i++){
                 double mean = std::stof(_scalingParameters[1][i+1]);
                 double std = std::stof(_scalingParameters[2][i+1]);
@@ -483,6 +483,14 @@ class Model{
             return _dZ4dA0;
         }
 
+        std::vector <double> globalDerivatives(std::vector<double> nnDerivatives, double pop, double rad){
+            std::vector<double> derivatives(9);
+            for (int i=0; i<derivatives.size(); i++){
+                derivatives[i] = 2 * pop * std::stof(_scalingParameters[2][i+1]) * nnDerivatives[i] / (std::stof(_scalingParameters[2][10]) * rad);
+            }
+            return derivatives;
+        }
+
         /**
          * @brief Attributes of the model
          * 
@@ -500,9 +508,9 @@ class Model{
         std::vector<double> _dZ4dZ3, _dZ4dA2, _dZ4dZ2, _dZ4dA1, _dZ4dZ1, _dZ4dA0;
         // Vector of vectors containing all the weights of the neural network
         std::vector<std::vector<double>> _weights;
-        // const std::string _folderName;
+        // Trajectory and material parameters
         std::vector<float> _scenarioParameters;
-        std::vector<float> _normalizedScenarioParameters;
+        // Scaling parameters for normalization of inputs/outputs
         std::vector<std::vector<std::string>> _scalingParameters;
 };
 
@@ -514,20 +522,30 @@ int main() {
     const std::string propertiesFile = "../input.dat";
     Input data(propertiesFile);
 
-    // Instantiate the classifiction and regression models
-    const std::string folderName = "../models/BlastRad1/";
-
     // Instantiate the population grid vector
     const std::string popGridFile = "../pop-grids/popgrid-2020-2pt5arcmin.bin";
     PopGrid popGrid(popGridFile);
 
     // Instantiate the neural network model
-    Model manualModel(folderName);
+    const std::string folderName = "../models/BlastRad1/";
+    Model model(folderName);
 
     // Find the damage radius
-    double damageRadiusbis = std::max(manualModel.evaluateOutput(data),0.0);
-    std::cout << "The radius with the implemented method is: " << damageRadiusbis << std::endl;
+    double damageRadius = std::max(model.evaluateOutput(data),0.0);
+    std::cout << "The radius of damage is: " << damageRadius <<  " m" << std::endl;
 
+    // Find the number of people affected
+    double affectedPop = 0.1 * popGrid.getAffectedPop(data._latitude, data._longitude, damageRadius);
+    std::cout << "The number of people affected is: " << affectedPop << std::endl;
+
+    // The derivatives of the output w.r.t. the inputs
+    std::vector<double> nnDerivatives = model.backPropagation();
+    std::vector<double> globalDerivatives = model.globalDerivatives(nnDerivatives, affectedPop, damageRadius);
+
+    // Print some derivatives
+    std::cout << "The derivatives with respect to the velocity is: " << globalDerivatives[4] << std::endl;
+    std::cout << "The derivatives with respect to the incidence angle is: " << globalDerivatives[5] << std::endl;
+    std::cout << "The derivatives with respect to the azimuth is: " << globalDerivatives[6] << std::endl;
 
     return 0;
 }
