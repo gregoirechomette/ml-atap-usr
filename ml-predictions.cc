@@ -7,9 +7,7 @@
 #include <ctime>
 #include <time.h>
 #include <algorithm>
-
-#include "./lib/cppflow/include/cppflow/ops.h"
-#include "./lib/cppflow/include/cppflow/model.h"
+#include <vector>
 
 
 // Constants
@@ -483,6 +481,15 @@ class Model{
             return _dZ4dA0;
         }
 
+        /**
+         * @brief Method to compute the derivatives of full-scale output w.r.t. full-scale inputs
+         * 
+         * @param nnDerivatives derivates of the neural network (normalized inputs and outputs)
+         * @param pop number of people affected by the asteroid scenario
+         * @param rad radius of damage
+         * @return std::vector <double> 
+         */
+
         std::vector <double> globalDerivatives(std::vector<double> nnDerivatives, double pop, double rad){
             std::vector<double> derivatives(9);
             for (int i=0; i<derivatives.size(); i++){
@@ -543,9 +550,9 @@ int main() {
     std::vector<double> globalDerivatives = model.globalDerivatives(nnDerivatives, affectedPop, damageRadius);
 
     // Print some derivatives
-    std::cout << "The derivatives with respect to the velocity is: " << globalDerivatives[4] << std::endl;
-    std::cout << "The derivatives with respect to the incidence angle is: " << globalDerivatives[5] << std::endl;
-    std::cout << "The derivatives with respect to the azimuth is: " << globalDerivatives[6] << std::endl;
+    std::cout << "The derivative with respect to the velocity is: " << globalDerivatives[4] << std::endl;
+    std::cout << "The derivative with respect to the incidence angle is: " << globalDerivatives[5] << std::endl;
+    std::cout << "The derivative with respect to the azimuth is: " << globalDerivatives[6] << std::endl;
 
     return 0;
 }
