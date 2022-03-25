@@ -247,7 +247,7 @@ class Model{
         void readWeightsFile(){
 
             // Open the file and declare reading variables
-            std::fstream file (_folderName + "/Regression_model/weights.csv", std::ios::in);
+            std::fstream file (_folderName + "weights.csv", std::ios::in);
             std::vector<double> row;
             std::string line, word;
 
@@ -276,7 +276,7 @@ class Model{
         void readingScalingParameters(){
 
             // Open the file and declare reading variables
-            std::string scalingFileName = _folderName + "/Scaling_parameters.csv";
+            std::string scalingFileName = _folderName + "scaling_parameters.csv";
             std::fstream file (scalingFileName, std::ios::in);
             std::vector<std::string> row;
             std::string line, word;
