@@ -1,11 +1,11 @@
-70              Diameter [m] 
+70             Diameter [m] 
 3500            Density [kg/m^3]
 100000          Strength [Pa]
 0.2             Alpha (strength scaling coefficient) [-]
-10000           Velocity [m/s]
-45              Incidence Angle [degrees]
-180             Azimuth [degrees]
+10000           Velocity [m/s] derivatives
+45              Incidence Angle [degrees] derivatives
+180             Azimuth [degrees] derivatives
 0.003           Luminous Efficiency [-]
 0.000000001     Ablation [kg m^-3]
-48.8647         Latitude [degrees]
-2.3490          Longitude [degrees]
+48.8647         Latitude [degrees] derivatives
+2.3490          Longitude [degrees] derivatives
