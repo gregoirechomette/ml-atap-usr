@@ -17,7 +17,7 @@ import tensorflow as tf
     
 # Load the model
 layer_units = list([64,128,256])
-model = tf.keras.models.load_model('../models/BlastRad1/Regression_model')
+model = tf.keras.models.load_model('../models/ThermRad2/Regression_model')
 print(model.summary())
 
 # Function to write the weights to csv
@@ -42,7 +42,7 @@ b3 = model.layers[5].bias.numpy().reshape((layer_units[2],1))
 b4 = model.layers[9].bias.numpy().reshape((1,1))
 
 # Write the radii in a .csv file
-fileName = 'weights-2.csv'
+fileName = '../models/ThermRad2/weights.csv'
 os.system('rm ' + fileName)
 f = open(fileName, 'a+')
 writeWeights(f, w1, b1)
