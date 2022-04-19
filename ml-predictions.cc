@@ -94,6 +94,26 @@ class Input {
 
 int main() {
 
+    // Material parameters 
+    float diameter = 70.0;
+    float density = 3500;
+    float strength = 100000;
+    float alpha = 0.2;
+    float lumEff = 0.003;
+    float ablation = 0.000000001;
+
+    // Coordinates
+    double latitude = 48.8647;
+    double longitude = 2.3490;
+
+    // Trajectory
+    float velocity = 10000;
+    float angle = 45;
+    float azimuth = 180;
+
+    std::vector<float> dataInp = {diameter, density, strength, alpha, velocity, angle, azimuth, lumEff, ablation};
+    
+
     // Instantiate the input objects with the scenario properties
     const std::string propertiesFile = "../input.dat";
     Input data(propertiesFile);
@@ -107,11 +127,11 @@ int main() {
     Model model(folderName);
 
     // Find the damage radius
-    double damageRadius = std::max(model.evaluateOutput(data._scenarioParameters),0.0);
+    double damageRadius = std::max(model.evaluateOutput(dataInp),0.0);
     std::cout << "The radius of damage is: " << damageRadius <<  " m" << std::endl;
 
     // Find the number of people affected
-    double affectedPop = 0.1 * popGrid.getAffectedPop(data._latitude, data._longitude, damageRadius);
+    double affectedPop = 0.1 * popGrid.getAffectedPop(latitude, longitude, damageRadius);
     std::cout << "The number of people affected is: " << affectedPop << std::endl;
 
     // The derivatives of the output w.r.t. the inputs
