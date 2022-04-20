@@ -1,17 +1,3 @@
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <sstream>
-#include <math.h>
-#include <stdio.h>
-#include <ctime>
-#include <time.h>
-#include <algorithm>
-#include <vector>
-
-// #include "input.h"
-
-
 class Model{
 
     public:

@@ -1,22 +1,13 @@
 #include <iostream>
 #include <fstream>
-#include <string>
-#include <sstream>
 #include <math.h>
-#include <stdio.h>
-#include <ctime>
-#include <time.h>
-#include <algorithm>
 #include <vector>
 
 #include "popGrid.h"
 
 // Constants
-const double pi = 3.14159;
 const double deg2rad = 0.01745329;
 const double earthRadius = 6.371e6;
-const double worldPop = 7.93 * pow(10,9);
-
 
 PopGrid::PopGrid(const std::string fileName): _fileName(fileName) {
     readFile();
