@@ -117,7 +117,7 @@ class Model{
         /**
          * @brief Method to compute the derivative of the ouput of a neural network w.r.t the inputs
          * 
-         * @return derivatives of the outputs with respect to the inputs
+         * @return derivatives of the outputs with respect to the inputs (all normalized)
          */
 
         std::vector<double> backPropagation();
@@ -125,13 +125,12 @@ class Model{
         /**
          * @brief Method to compute the derivatives of full-scale output w.r.t. full-scale inputs
          * 
-         * @param nnDerivatives derivates of the neural network (normalized inputs and outputs)
          * @param pop number of people affected by the asteroid scenario
          * @param rad radius of damage
          * @return std::vector <double> 
          */
 
-        std::vector <double> globalDerivatives(std::vector<double> nnDerivatives, double pop, double rad);
+        std::vector <double> globalDerivatives(double pop, double rad);
 
         /**
          * @brief Attributes of the model

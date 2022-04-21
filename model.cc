@@ -178,7 +178,8 @@ std::vector<double> Model::backPropagation(){
 }
 
 
-std::vector <double> Model::globalDerivatives(std::vector<double> nnDerivatives, double pop, double rad){
+std::vector <double> Model::globalDerivatives(double pop, double rad){
+    std::vector<double> nnDerivatives = backPropagation();
     std::vector<double> derivatives(9);
     for (int i=0; i<derivatives.size(); i++){
         derivatives[i] = 2 * pop * std::stof(_scalingParameters[2][i+1]) * nnDerivatives[i] / (std::stof(_scalingParameters[2][10]) * rad);
