@@ -7,19 +7,19 @@
 
 // Input structure
 struct Input{
-    double latitude = 48.8647;
-    double longitude = 2.3490;
-    double velocity = 10000;
-    double angle = 45;
-    double azimuth = 180;
+    double latitude = 48.8647;  // degrees in range [-90;90]
+    double longitude = 2.3490;  // degrees in range [-180;180]
+    double velocity = 10000;    // m/s
+    double angle = 45;          // degrees w.r.t. horizontal
+    double azimuth = 180;       // degrees clockwise w.r.t. North
 };
 
 // Output structure
 struct Output{
-    double affectedPopulation;
-    double velocityDerivative;
-    double angleDerivative;
-    double azimuthDerivative;
+    double affectedPopulation;  // number of people N [-]
+    double velocityDerivative;  // dN/dvelocity [s/m]
+    double angleDerivative;     // dN/dangle [1/degrees]
+    double azimuthDerivative;   // dN/dazimuth [1/degrees]
 };
 
 
