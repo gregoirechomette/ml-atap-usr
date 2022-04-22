@@ -1,5 +1,5 @@
 # ml-atap-usr
-Load asteroid damage ML models from a C++ code. Use the models for inference to predict the ground damage of asteroid impacts as well as the sensitivity (derivative) of the ground damages w.r.t. the input parameters.
+Use accurate machine learning models to predict the number of people affected by an asteroid impact scenario given the entry conditions. Compute derivatives of the number of people affected w.r.t. the entry conditions in order to help mission design teams.
 
 ## How to install it
 ### Clone the current repository
@@ -7,26 +7,44 @@ Load asteroid damage ML models from a C++ code. Use the models for inference to 
 git clone https://github.com/gregoirechomette/ml-atap-usr.git
 ```
 
-### Request the grid population file
-The world population data is available [online](https://sedac.ciesin.columbia.edu/data/collection/gpw-v4) - not pushed here because of its large size (~300MB). Alternatively, you can reach out directly to me (gregoire.a.chomette@nasa.gov) to receive a binary file containing the world population data. Then, the path to the population file needs to be updated with the variable ``` popGridFile ``` in the main function.
+### Obtain the ML models
+In order to predict the number of people affected by an asteroid impadct scenario, a machine learning model is used to assess the size of the ground damage (more specifically, the radius of the circular damaged area). Two well-trained machine learning models are uploaded with this project:
+- BlastRad 1: outputs the radius of the circular area with at least 1psi blast overpressure
+- ThermRad 2: outputs the radius of the circular area with thermal radiations leading to at least 2nd degree burns  
+
+If other models need to be used, either contact gregoire.a.chomette@nasa.gov or generate them with ``` https://github.com/gregoirechomette/ml-atap-dv.git``` - they then need to be converted from a tensorflow format to a csv file using the script ``` python-utils/model2csv.py```
+
+-> The path to the ML model selected needs to be specified with the variable ```folderName``` in the main function.
+
+
+### Obtain the world population data
+The world population data is not pushed here because of its large size (~300MB). You can reach out directly to me (gregoire.a.chomette@nasa.gov) to receive a binary file containing the world grid data. 
+
+-> The path to the population file needs to be updated with the variable ``` popGridFile ``` in the main function.
 
 
 ## How to use it
 
-### Enter the correct asteroid entry conditions
-The asteroid properties and trajectories can be modified in the ```input.dat``` file. An example is provided:
+### Inputs and outputs
+The asteroid trajectory is defined using an input structure - an example is provided below:
 ```
-50              Diameter [m] 
-3500            Density [kg/m^3]
-100000          Strength [Pa]
-0.2             Alpha (strength scaling coefficient) [-]
-10000           Velocity [m/s]
-45              Incidence Angle [degrees]
-180             Azimuth [degrees]
-0.003           Luminous Efficiency [-]
-0.000000001     Ablation [kg m^-3]
-48.8647         Latitude [degrees]
-2.3490          Longitude [degrees]
+struct Input{
+    double latitude = 48.8647;  // degrees in range [-90;90]
+    double longitude = 2.3490;  // degrees in range [-180;180]
+    double velocity = 10000;    // m/s
+    double angle = 45;          // degrees w.r.t. horizontal
+    double azimuth = 180;       // degrees clockwise w.r.t. North
+};
+```
+
+The outputs of the program can be retrieved through an output structure - an example is provided below:
+```
+struct Output{
+    double affectedPopulation;  // number of people N [-]
+    double velocityDerivative;  // dN/dvelocity [s/m]
+    double angleDerivative;     // dN/dangle [1/degrees]
+    double azimuthDerivative;   // dN/dazimuth [1/degrees]
+};
 ```
 
 
@@ -43,13 +61,5 @@ make
 ### Run the program
 ```
 cd ml-atap-usr/build
-./ml-predictions
+./main
 ```
-
-<!-- ## Key run time results
-
-Instantiate the TensorFlow C model: ~10^-1 seconds  
-Evaluate the damage radius for one scenario: ~10^-4 seconds
-
-Instantiate the population grid vector: ~ 10^0 seconds  
-Evaluate the population affected for one scenario: ~ 10^-6 seconds -->
