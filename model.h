@@ -22,6 +22,18 @@ class Model{
         void readingScalingParameters();
 
         /**
+         * @brief Method to structure the input vector with all parameters
+         * 
+         * @param velocity velocity of the asteroid [m/s]
+         * @param incidenceAngle angle of incidence of asteroid entering the atmosphere, 0: horizontal, 90: vertical [degrees]
+         * @param azimuth azimuth of the asteroid according to PAIR conventions [degrees]
+         * @return float vector containing the 9 inputs to feed to the NN
+         * 
+         */
+
+        std::vector<float> structInputVector(double velocity, double incidenceAngle, double azimuth);
+
+        /**
          * @brief Method to normalize the input parameters before feeding the neural network
          * 
          * @param data Input object containing real-scale asteroid properties and trajectories
