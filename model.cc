@@ -106,6 +106,57 @@ float Model::computeIncidenceAngle(std::vector<double> x, std::vector<double> v)
     return incidenceAngle;
 }
 
+float Model::computeAzimuth(std::vector<double> x, std::vector<double> v){
+
+    // Compute the norms of both vectors
+    double xNorm = sqrt( pow(x[0],2) + pow(x[1],2) + pow(x[2],2));
+    double vNorm = sqrt( pow(v[0],2) + pow(v[1],2) + pow(v[2],2));
+
+    // Retrieve the spherical coordinates and angle of incidence
+    double sphericalCoordinates = cartesianToSpherical(x);
+    double incidenceAngle = (double) computeIncidenceAngle(x,v);
+
+    // Compute the horizontal velocity vector
+    std::vector<double> velocityHorizontal(3);
+    for (int i(0); i<3; i++){
+        velocityHorizontal[i] = v[i] + (x[i]/xNorm) * vNorm * sin(incidenceAngle * pi /180);
+    }
+
+    // Find the North and East direction in the horizontal plan
+    std::vector<double> north(3);
+    std::vector<double> east(3);
+    north[0] = - cos(sphericalCoordinates[1]) * cos(sphericalCoordinates[2]);
+    north[1] = - cos(sphericalCoordinates[1]) * sin(sphericalCoordinates[2]);
+    north[2] = sin(sphericalCoordinates[1]);
+    east[0] = - sin(sphericalCoordinates[2]);
+    east[1] = cos(sphericalCoordinates[2]);
+    east[2] = 0;
+
+    // Project horizontal vector on North and East
+    double velocityHorizontalNorth = velocityHorizontal[0] * north[0] 
+                                    + velocityHorizontal[1] * north[1] 
+                                    + velocityHorizontal[2] * north[2];
+    double velocityHorizontalEast = velocityHorizontal[0] * east[0] 
+                                    + velocityHorizontal[1] * east[1] 
+                                    + velocityHorizontal[2] * east[2];
+    if (abs(velocityHorizontalEast) < 0.001){
+        velocityHorizontalEast = 0.001;
+    }
+
+    // Find azimuth with trigonometrical direction, starting from East
+    double trigonometricAzimuth;
+    if (velocityHorizontalEast > 0){
+        trigonometricAzimuth = (180/pi) * atan(velocityHorizontalNorth/velocityHorizontalEast);
+    }else{
+        trigonometricAzimuth = (180/pi) * atan(velocityHorizontalNorth/velocityHorizontalEast) + pi;
+    }
+
+    float pairAzimuth = (float) 90 - trigonometricAzimuth;
+    pairAzimuth = ((pairAzimuth % 360) + 360) % 360;
+
+    return pairAzimuth;
+}
+
 std::vector<double> Model::cartesianToSpherical(std::vector<double> x){
 
     // Create the output vector
