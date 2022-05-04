@@ -34,6 +34,44 @@ class Model{
         std::vector<float> structInputVector(double velocity, double incidenceAngle, double azimuth);
 
         /**
+         * @brief Method to compute the absolute velocity of the asteroid 
+         * 
+         * @param v velocity vector of the astroid (fixed, Earth-centered coordinate system)
+         * @return float absolute velocity of the asteroid
+         */
+
+        float computeVelocity(std::vector<double> v);
+
+        /**
+         * @brief Method to compute the incidence angle of the asteroid
+         * 
+         * @param x position vector of the astroid (fixed, Earth-centered coordinate system)
+         * @param v velocity vector of the astroid (fixed, Earth-centered coordinate system)
+         * @return float incidence angle of asteroid (w.r.t. horizontal), in range [0-90]
+         */
+
+        float computeIncidenceAngle(std::vector<double> x, std::vector<double> v);
+
+        /**
+         * @brief Method to compute the azimuth (PAIR format) of the asteroid
+         * 
+         * @param x position vector of the astroid (fixed, Earth-centered coordinate system)
+         * @param v velocity vector of the astroid (fixed, Earth-centered coordinate system)
+         * @return float azimuth angle, clockwise from North, in range [0-360]
+         */
+
+        float computeAzimuth(std::vector<double> x, std::vector<double> v);
+
+        /**
+         * @brief Method to transform position vector from cartesian to spherical coordinates
+         * 
+         * @param x position vector of the astroid (fixed, Earth-centered coordinate system) (x, y, z)
+         * @return std::vector<double> position vector of the asteroid in spherical system (r, theta, phi)
+         */
+
+        std::vector<double> cartesianToSpherical(std::vector<double> x);
+
+        /**
          * @brief Method to normalize the input parameters before feeding the neural network
          * 
          * @param data Input object containing real-scale asteroid properties and trajectories

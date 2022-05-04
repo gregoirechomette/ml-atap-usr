@@ -113,7 +113,7 @@ float Model::computeAzimuth(std::vector<double> x, std::vector<double> v){
     double vNorm = sqrt( pow(v[0],2) + pow(v[1],2) + pow(v[2],2));
 
     // Retrieve the spherical coordinates and angle of incidence
-    double sphericalCoordinates = cartesianToSpherical(x);
+    std::vector<double> sphericalCoordinates = cartesianToSpherical(x);
     double incidenceAngle = (double) computeIncidenceAngle(x,v);
 
     // Compute the horizontal velocity vector
@@ -152,7 +152,7 @@ float Model::computeAzimuth(std::vector<double> x, std::vector<double> v){
     }
 
     float pairAzimuth = (float) 90 - trigonometricAzimuth;
-    pairAzimuth = ((pairAzimuth % 360) + 360) % 360;
+    pairAzimuth = ((int(pairAzimuth) % 360) + 360) % 360;
 
     return pairAzimuth;
 }
