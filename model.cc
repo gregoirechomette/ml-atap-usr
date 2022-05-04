@@ -2,9 +2,11 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
+#include <cmath>
 
 #include "model.h"
 
+const double pi = 3.14159;
 
 Model::Model(const std::string folderName):
         _folderName(folderName)
@@ -84,6 +86,42 @@ std::vector<float> Model::structInputVector(double velocity, double incidenceAng
     return inputNN;
 }
 
+float Model::computeVelocity(std::vector<double> v){
+    
+    // Compute the absolute velocity
+    float velocity = (float) sqrt( pow(v[0],2) + pow(v[1],2) + pow(v[2],2) );
+    return velocity;
+}
+
+float Model::computeIncidenceAngle(std::vector<double> x, std::vector<double> v){
+
+    // Compute the scalar product
+    double scalarProduct = x[0] * v[0] + x[1] * v[1] + x[2] * v[2];
+    // Compute the norms of both vectors
+    double xNorm = sqrt( pow(x[0],2) + pow(x[1],2) + pow(x[2],2));
+    double vNorm = sqrt( pow(v[0],2) + pow(v[1],2) + pow(v[2],2));
+    // Compute the incidence angle
+    float incidenceAngle = (float) (180/pi) * (acos(scalarProduct/(xNorm * vNorm)) - 0.5 * pi);
+
+    return incidenceAngle;
+}
+
+std::vector<double> Model::cartesianToSpherical(std::vector<double> x){
+
+    // Create the output vector
+    std::vector<double> sphericalCoordinates(3);
+
+    // Populate the output vector (r, theta, phi)
+    sphericalCoordinates[0] = sqrt( pow(x[0],2) + pow(x[1],2) + pow(x[2],2));
+    sphericalCoordinates[1] = atan((sqrt(pow(x[0],2) + pow(x[1],2)))/(pow(x[2],2)));
+    if (x[0]>0){
+        sphericalCoordinates[2] = atan((x[1])/(x[0]));
+    } else{
+        sphericalCoordinates[2] = atan((x[1])/(x[0])) + pi;
+    }
+
+    return sphericalCoordinates;
+}
     
 std::vector<double> Model::normalizeInputs(std::vector<float> data){
     std::vector<double> normalizedInputs(9);
