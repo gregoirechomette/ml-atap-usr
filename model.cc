@@ -66,7 +66,7 @@ void Model::readingScalingParameters(){
     return;
 }
 
-std::vector<float> Model::structInputVector(double velocity, double incidenceAngle, double azimuth){
+std::vector<float> Model::structInputVector(std::vector<double> x, std::vector<double> v){
     
     // Baseline material parameters 
     float diameter = 70.0;
@@ -77,12 +77,12 @@ std::vector<float> Model::structInputVector(double velocity, double incidenceAng
     float ablation = 0.000000001;
 
     // Conversion of parameters from double to float
-    float velocity_f = (float) velocity;
-    float incidenceAngle_f = (float) incidenceAngle;
-    float azimuth_f = (float) azimuth;
+    float velocity = 1000 * computeVelocity(v);
+    float incidenceAngle = computeIncidenceAngle(x,v);
+    float azimuth = computeAzimuth(x,v);
 
     // Group and return
-    std::vector<float> inputNN = {diameter, density, strength, alpha, velocity_f, incidenceAngle_f, azimuth_f, lumEff, ablation};
+    std::vector<float> inputNN = {diameter, density, strength, alpha, velocity, incidenceAngle, azimuth, lumEff, ablation};
     return inputNN;
 }
 
@@ -148,7 +148,7 @@ float Model::computeAzimuth(std::vector<double> x, std::vector<double> v){
     if (velocityHorizontalEast > 0){
         trigonometricAzimuth = (180/pi) * atan(velocityHorizontalNorth/velocityHorizontalEast);
     }else{
-        trigonometricAzimuth = (180/pi) * atan(velocityHorizontalNorth/velocityHorizontalEast) + pi;
+        trigonometricAzimuth = (180/pi) * (atan(velocityHorizontalNorth/velocityHorizontalEast) + pi);
     }
 
     float pairAzimuth = (float) 90 - trigonometricAzimuth;
@@ -164,7 +164,7 @@ std::vector<double> Model::cartesianToSpherical(std::vector<double> x){
 
     // Populate the output vector (r, theta, phi)
     sphericalCoordinates[0] = sqrt( pow(x[0],2) + pow(x[1],2) + pow(x[2],2));
-    sphericalCoordinates[1] = atan((sqrt(pow(x[0],2) + pow(x[1],2)))/(pow(x[2],2)));
+    sphericalCoordinates[1] = atan((sqrt(pow(x[0],2) + pow(x[1],2)))/(x[2]));
     if (x[0]>0){
         sphericalCoordinates[2] = atan((x[1])/(x[0]));
     } else{
