@@ -5,13 +5,15 @@
 #include "popGrid.h"
 
 
-// Input structure
+// Input structure (already pre-filled for demonstration purposes)
 struct Input{
     double latitude = 48.8647;  // degrees in range [-90;90]
     double longitude = 2.3490;  // degrees in range [-180;180]
     double velocity = 10000;    // m/s
     double angle = 45;          // degrees w.r.t. horizontal
     double azimuth = 180;       // degrees clockwise w.r.t. North
+    std::vector<double> positionVector { -6021.8, -1767.0222, 1137.72238 };  //[km]
+    std::vector<double> velocityVector { 8.22646774, 10.6055, -5.0710931 };      //[km/s]
 };
 
 // Output structure
@@ -27,7 +29,7 @@ struct Output{
 int modelCall(Input input, Model model, PopGrid &popGrid, Output &output){
 
     // Structure the input vector
-    std::vector<float> scenario = model.structInputVector(input.velocity, input.angle, input.azimuth);
+    std::vector<float> scenario = model.structInputVector(input.positionVector, input.velocityVector);
 
     // Find the damage radius
     double damageRadius = std::max(model.evaluateOutput(scenario),0.0);
@@ -35,7 +37,7 @@ int modelCall(Input input, Model model, PopGrid &popGrid, Output &output){
     // Find the number of people affected
     double affectedPop = 0.1 * popGrid.getAffectedPop(input.latitude, input.longitude, damageRadius);
 
-    // The derivatives of the output w.r.t. the inputs
+    // Find the derivatives of the output w.r.t. the inputs
     std::vector<double> globalDerivatives = model.globalDerivatives(affectedPop, damageRadius);
 
     // Output derivatives of number of people w.r.t. inputs
@@ -63,7 +65,7 @@ int main() {
 
     // ************ Evaluations ************
     Input input = {}; Output output;
-    for (int i=0; i<20; i++){
+    for (int i=0; i<3; i++){
 
         // Update the input (if necessary)
         input.latitude += 0.05 * i;
