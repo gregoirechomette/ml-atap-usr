@@ -5,28 +5,24 @@
 #include "popGrid.h"
 
 
-// Input structure (already pre-filled for demonstration purposes)
+// Input structure 
 struct Input{
-    double latitude = 48.8647;  // degrees in range [-90;90]
-    double longitude = 2.3490;  // degrees in range [-180;180]
-    double velocity = 10000;    // m/s
-    double angle = 45;          // degrees w.r.t. horizontal
-    double azimuth = 180;       // degrees clockwise w.r.t. North
-    std::vector<double> positionVector { -6021.8, -1767.0222, 1137.72238 };  //[km]
-    std::vector<double> velocityVector { 8.22646774, 10.6055, -5.0710931 };      //[km/s]
+    std::vector<double> positionVector;     // [m]
+    std::vector<double> velocityVector;     // [m/s]
 };
 
 // Output structure
 struct Output{
-    double affectedPopulation;  // number of people N [-]
-    double velocityDerivative;  // dN/dvelocity [s/m]
-    double angleDerivative;     // dN/dangle [1/degrees]
-    double azimuthDerivative;   // dN/dazimuth [1/degrees]
+    double affectedPopulation;              // number of people N [-]
+    double velocityDerivative;              // dN/dvelocity [s/m]
+    double angleDerivative;                 // dN/dangle [1/degrees]
+    double azimuthDerivative;               // dN/dazimuth [1/degrees]
 };
 
 
+
 // Main function call
-int modelCall(Input input, Model model, PopGrid &popGrid, Output &output){
+int neuralNetPredictions(Input input, Model model, PopGrid &popGrid, Output &output){
 
     // Structure the input vector
     std::vector<float> scenario = model.structInputVector(input.positionVector, input.velocityVector);
@@ -35,7 +31,7 @@ int modelCall(Input input, Model model, PopGrid &popGrid, Output &output){
     double damageRadius = std::max(model.evaluateOutput(scenario),0.0);
 
     // Find the number of people affected
-    double affectedPop = 0.1 * popGrid.getAffectedPop(input.latitude, input.longitude, damageRadius);
+    double affectedPop = 0.1 * popGrid.getAffectedPop(input.positionVector, damageRadius);
 
     // Find the derivatives of the output w.r.t. the inputs
     std::vector<double> globalDerivatives = model.globalDerivatives(affectedPop, damageRadius);
@@ -48,6 +44,7 @@ int modelCall(Input input, Model model, PopGrid &popGrid, Output &output){
 
     return 0;
 }
+
 
 
 int main() {
@@ -63,18 +60,21 @@ int main() {
     PopGrid popGrid(popGridFile);
 
 
-    // ************ Evaluations ************
-    Input input = {}; Output output;
+
+    // ************ Evaluations during optimization loop ************
+    Input input; Output output;
     for (int i=0; i<3; i++){
 
-        // Update the input (if necessary)
-        input.latitude += 0.05 * i;
+        // Generate an input (position and velocity vectors)
+        input.positionVector = { -6021.8, -1767.0222, 1137.72238 };    
+        input.velocityVector = { 8226.46774, 10605.5, -5071.0931 };  
 
         // Call the main function
-        int functionReturn = modelCall(input, model, popGrid, output);
+        int functionReturn = neuralNetPredictions(input, model, popGrid, output);
 
-        // Print output
+        // Print output for demonstration purposes
         std::cout << "The affected population is: " << output.affectedPopulation << std::endl;
+        std::cout << "The derivative w.r.t the velocity is: " << output.velocityDerivative << std::endl;
 
     }
 
