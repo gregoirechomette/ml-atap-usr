@@ -77,7 +77,7 @@ std::vector<float> Model::structInputVector(std::vector<double> x, std::vector<d
     float ablation = 0.000000001;
 
     // Conversion of parameters from double to float
-    float velocity = 1000 * computeVelocity(v);
+    float velocity = computeVelocity(v);
     float incidenceAngle = computeIncidenceAngle(x,v);
     float azimuth = computeAzimuth(x,v);
 
