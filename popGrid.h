@@ -50,6 +50,24 @@ class PopGrid {
 
         double getAffectedPop(double latitude, double longitude, double damagedRadius);
 
+        /**
+         * @brief Method to transform position vector from cartesian to spherical coordinates
+         * 
+         * @param x position vector of the astroid (fixed, Earth-centered coordinate system) (x, y, z)
+         * @return std::vector<double> position vector of the asteroid in spherical system (r, theta, phi)
+         */
+
+        std::vector<double> cartesianToSpherical(std::vector<double> x);
+
+        /**
+         * @brief Method to convert spherical coordinates to latitude and longitude
+         * 
+         * @param sphericalCoordinates position vector of the asteroid in spherical system (r, theta, phi)
+         * @return std::vector<double> [lat;long] vector in the ranges [-90;90] and [-180;180]
+         */
+
+        std::vector<double> sphericalToLatLong(std::vector<double> sphericalCoordinates);
+
         // Atributes
         const std::string _fileName;
         int nRows, nCol, xlCorner, ylCorner, yuCorner, noDat, vSize;

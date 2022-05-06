@@ -6,6 +6,7 @@
 #include "popGrid.h"
 
 // Constants
+const double pi = 3.14159;
 const double deg2rad = 0.01745329;
 const double earthRadius = 6.371e6;
 
@@ -97,5 +98,47 @@ double PopGrid::getAffectedPop(double latitude, double longitude, double damaged
         }
     }
     return totalAffPop;
+}
 
+
+std::vector<double> PopGrid::cartesianToSpherical(std::vector<double> x){
+
+    // Create the output vector
+    std::vector<double> sphericalCoordinates(3);
+
+    // Populate the output vector (r, theta, phi)
+    sphericalCoordinates[0] = sqrt( pow(x[0],2) + pow(x[1],2) + pow(x[2],2));
+    sphericalCoordinates[1] = atan((sqrt(pow(x[0],2) + pow(x[1],2)))/(x[2]));
+    if (x[0]>0){
+        sphericalCoordinates[2] = atan((x[1])/(x[0]));
+    } else{
+        sphericalCoordinates[2] = atan((x[1])/(x[0])) + pi;
+    }
+
+    return sphericalCoordinates;
+}
+
+
+std::vector<double> PopGrid::sphericalToLatLong(std::vector<double> sphericalCoordinates){
+
+    // Create the output vector
+    std::vector<double> LatLong(2);
+
+    // Compute the latitude
+    if (sphericalCoordinates[1] > 0){
+        LatLong[0] = 90 - (180/pi) * sphericalCoordinates[1];
+    }else{
+        LatLong[0] = - 90 - (180/pi) * sphericalCoordinates[1];
+    }
+
+    // Compute the longitude
+    if (sphericalCoordinates[2]> 180){
+        LatLong[1] = sphericalCoordinates[2] - 360;
+    }else if (sphericalCoordinates[2] < -180){
+        LatLong[1] = sphericalCoordinates[2] + 360;
+    }else{
+        LatLong[1] = sphericalCoordinates[2];
+    }
+
+    return LatLong;
 }
