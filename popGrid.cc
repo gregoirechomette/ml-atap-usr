@@ -81,19 +81,25 @@ double PopGrid::getDistance(double lat1, double lon1, double lat2, double lon2){
 }
 
 
-double PopGrid::getAffectedPop(double latitude, double longitude, double damagedRadius){
+double PopGrid::getAffectedPop(std::vector<double> x, double damagedRadius){
+
+    // Obtain the cartesian coordinates
+    std::vector<double> sphericalCoordinates = cartesianToSpherical(x);
+
+    // Obtain the latitude and longitude
+    std::vector<double> latLong = sphericalToLatLong(sphericalCoordinates);
 
     // Number of cells to check on the latitude direction
     int cellLatNumber = 2 * asin(0.5 * damagedRadius / earthRadius) / arcLengthDeg + 1;
-    int cellLonNumber = 2 * asin(0.5 * damagedRadius / earthRadius) / arcLengthDeg / cos(deg2rad * latitude) + 1;
+    int cellLonNumber = 2 * asin(0.5 * damagedRadius / earthRadius) / arcLengthDeg / cos(deg2rad * latLong[0]) + 1;
 
     double distanceComp;
     double totalAffPop = 0.0;
     for (int i=-cellLatNumber; i <=cellLatNumber; i++){
         for (int j=-cellLonNumber; j<=cellLonNumber; j++){
-            distanceComp = getDistance(latitude, longitude, latitude + i * arcLengthDeg, longitude + j * arcLengthDeg);
+            distanceComp = getDistance(latLong[0], latLong[1], latLong[0] + i * arcLengthDeg, latLong[1] + j * arcLengthDeg);
             if (distanceComp < damagedRadius){
-                totalAffPop += getCellPop(latitude + i * arcLengthDeg, longitude + j * arcLengthDeg);
+                totalAffPop += getCellPop(latLong[0] + i * arcLengthDeg, latLong[1] + j * arcLengthDeg);
             }
         }
     }
@@ -122,23 +128,23 @@ std::vector<double> PopGrid::cartesianToSpherical(std::vector<double> x){
 std::vector<double> PopGrid::sphericalToLatLong(std::vector<double> sphericalCoordinates){
 
     // Create the output vector
-    std::vector<double> LatLong(2);
+    std::vector<double> latLong(2);
 
     // Compute the latitude
     if (sphericalCoordinates[1] > 0){
-        LatLong[0] = 90 - (180/pi) * sphericalCoordinates[1];
+        latLong[0] = 90 - (180/pi) * sphericalCoordinates[1];
     }else{
-        LatLong[0] = - 90 - (180/pi) * sphericalCoordinates[1];
+        latLong[0] = - 90 - (180/pi) * sphericalCoordinates[1];
     }
 
     // Compute the longitude
     if (sphericalCoordinates[2]> 180){
-        LatLong[1] = sphericalCoordinates[2] - 360;
+        latLong[1] = sphericalCoordinates[2] - 360;
     }else if (sphericalCoordinates[2] < -180){
-        LatLong[1] = sphericalCoordinates[2] + 360;
+        latLong[1] = sphericalCoordinates[2] + 360;
     }else{
-        LatLong[1] = sphericalCoordinates[2];
+        latLong[1] = sphericalCoordinates[2];
     }
 
-    return LatLong;
+    return latLong;
 }

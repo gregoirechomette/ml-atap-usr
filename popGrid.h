@@ -42,13 +42,12 @@ class PopGrid {
         /**
          * @brief Get the total affected population given the radius of a circle, together with its lat and long
          * 
-         * @param latitude latitude of the center of the circle [degrees]
-         * @param longitude longitude of the center of the circle [degrees]
+         * @param x position vector of the astroid (fixed, Earth-centered coordinate system) (x, y, z)
          * @param damagedRadius radius of the circular damaged area [meters]
          * @return double number of people affected [-]
          */
 
-        double getAffectedPop(double latitude, double longitude, double damagedRadius);
+        double getAffectedPop(std::vector<double> x, double damagedRadius);
 
         /**
          * @brief Method to transform position vector from cartesian to spherical coordinates
