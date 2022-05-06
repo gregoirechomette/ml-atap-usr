@@ -138,12 +138,12 @@ std::vector<double> PopGrid::sphericalToLatLong(std::vector<double> sphericalCoo
     }
 
     // Compute the longitude
-    if (sphericalCoordinates[2]> 180){
-        latLong[1] = sphericalCoordinates[2] - 360;
+    if ((180/pi) *sphericalCoordinates[2]> 180){
+        latLong[1] = (180/pi) * sphericalCoordinates[2] - 360;
     }else if (sphericalCoordinates[2] < -180){
-        latLong[1] = sphericalCoordinates[2] + 360;
+        latLong[1] = (180/pi) * sphericalCoordinates[2] + 360;
     }else{
-        latLong[1] = sphericalCoordinates[2];
+        latLong[1] = (180/pi) * sphericalCoordinates[2];
     }
 
     return latLong;
