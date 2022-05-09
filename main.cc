@@ -66,8 +66,8 @@ int main() {
     for (int i=0; i<3; i++){
 
         // Generate an input (position and velocity vectors)
-        input.positionVector = { -6021.8, -1767.0222, 1137.72238 };    
-        input.velocityVector = { 8226.46774, 10605.5, -5071.0931 };  
+        input.positionVector = { 3654.32, 4381.75108, 2850.44503 };    
+        input.velocityVector = { -13252.019, -24529.8, 1302.29 };  
 
         // Call the main function
         int functionReturn = neuralNetPredictions(input, model, popGrid, output);

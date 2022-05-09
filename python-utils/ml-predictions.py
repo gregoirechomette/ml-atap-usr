@@ -24,9 +24,9 @@ scenario = {'Diameter [m]':             [70],
             'Density [kg/m^3]':         [3500],
             'Strength [Pa]':            [1e5],
             'Alpha coefficient [-]':    [0.2],
-            'Velocity [m/s]':           [1e4],
-            'Incidence angle [degree]': [45],
-            'Azimuth [degrees]':        [180],
+            'Velocity [m/s]':           [27911],
+            'Incidence angle [degree]': [58.75],
+            'Azimuth [degrees]':        [338],
             'LumEff [-]':               [3e-3],
             'Ablation [kg/J]':          [1e-9]}
 
