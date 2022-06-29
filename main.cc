@@ -25,7 +25,7 @@ struct Output{
 int neuralNetPredictions(Input input, Model model, PopGrid &popGrid, Output &output){
 
     // Structure the input vector
-    std::vector<float> scenario = model.structInputVector(input.positionVector, input.velocityVector);
+    std::vector<double> scenario = model.structInputVector(input.positionVector, input.velocityVector);
 
     // Find the damage radius
     double damageRadius = std::max(model.evaluateOutput(scenario),0.0);

@@ -66,34 +66,34 @@ void Model::readingScalingParameters(){
     return;
 }
 
-std::vector<float> Model::structInputVector(std::vector<double> x, std::vector<double> v){
+std::vector<double> Model::structInputVector(std::vector<double> x, std::vector<double> v){
     
     // Baseline material parameters 
-    float diameter = 70.0;
-    float density = 3500;
-    float strength = 100000;
-    float alpha = 0.2;
-    float lumEff = 0.003;
-    float ablation = 0.000000001;
+    double diameter = 70.0;
+    double density = 3500;
+    double strength = 100000;
+    double alpha = 0.2;
+    double lumEff = 0.003;
+    double ablation = 0.000000001;
 
-    // Conversion of parameters from double to float
-    float velocity = computeVelocity(v);
-    float incidenceAngle = computeIncidenceAngle(x,v);
-    float azimuth = computeAzimuth(x,v);
+    // Conversion of parameters from double to double
+    double velocity = computeVelocity(v);
+    double incidenceAngle = computeIncidenceAngle(x,v);
+    double azimuth = computeAzimuth(x,v);
 
     // Group and return
-    std::vector<float> inputNN = {diameter, density, strength, alpha, velocity, incidenceAngle, azimuth, lumEff, ablation};
+    std::vector<double> inputNN = {diameter, density, strength, alpha, velocity, incidenceAngle, azimuth, lumEff, ablation};
     return inputNN;
 }
 
-float Model::computeVelocity(std::vector<double> v){
+double Model::computeVelocity(std::vector<double> v){
     
     // Compute the absolute velocity
-    float velocity = (float) sqrt( pow(v[0],2) + pow(v[1],2) + pow(v[2],2) );
+    double velocity = (double) sqrt( pow(v[0],2) + pow(v[1],2) + pow(v[2],2) );
     return velocity;
 }
 
-float Model::computeIncidenceAngle(std::vector<double> x, std::vector<double> v){
+double Model::computeIncidenceAngle(std::vector<double> x, std::vector<double> v){
 
     // Compute the scalar product
     double scalarProduct = x[0] * v[0] + x[1] * v[1] + x[2] * v[2];
@@ -101,12 +101,12 @@ float Model::computeIncidenceAngle(std::vector<double> x, std::vector<double> v)
     double xNorm = sqrt( pow(x[0],2) + pow(x[1],2) + pow(x[2],2));
     double vNorm = sqrt( pow(v[0],2) + pow(v[1],2) + pow(v[2],2));
     // Compute the incidence angle
-    float incidenceAngle = (float) (180/pi) * (acos(scalarProduct/(xNorm * vNorm)) - 0.5 * pi);
+    double incidenceAngle = (double) (180/pi) * (acos(scalarProduct/(xNorm * vNorm)) - 0.5 * pi);
 
     return incidenceAngle;
 }
 
-float Model::computeAzimuth(std::vector<double> x, std::vector<double> v){
+double Model::computeAzimuth(std::vector<double> x, std::vector<double> v){
 
     // Compute the norms of both vectors
     double xNorm = sqrt( pow(x[0],2) + pow(x[1],2) + pow(x[2],2));
@@ -151,7 +151,7 @@ float Model::computeAzimuth(std::vector<double> x, std::vector<double> v){
         trigonometricAzimuth = (180/pi) * (atan(velocityHorizontalNorth/velocityHorizontalEast) + pi);
     }
 
-    float pairAzimuth = (float) 90 - trigonometricAzimuth;
+    double pairAzimuth = (double) 90 - trigonometricAzimuth;
     pairAzimuth = ((int(pairAzimuth) % 360) + 360) % 360;
 
     return pairAzimuth;
@@ -174,7 +174,7 @@ std::vector<double> Model::cartesianToSpherical(std::vector<double> x){
     return sphericalCoordinates;
 }
     
-std::vector<double> Model::normalizeInputs(std::vector<float> data){
+std::vector<double> Model::normalizeInputs(std::vector<double> data){
     std::vector<double> normalizedInputs(9);
     for (int i=0; i<9; i++){
         double mean = std::stof(_scalingParameters[1][i+1]);
@@ -265,7 +265,7 @@ std::vector<double> Model::forwardPropagation(std::vector<double> input){
     return _z4;
 }
 
-double Model::evaluateOutput(std::vector<float> data){
+double Model::evaluateOutput(std::vector<double> data){
 
     // Normalize the input data
     std::vector<double> normalizedInputs = normalizeInputs(data);

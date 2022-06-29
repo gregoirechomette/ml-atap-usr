@@ -26,40 +26,40 @@ class Model{
          * 
          * @param x position vector of the astroid (fixed, Earth-centered coordinate system)
          * @param v velocity vector of the astroid (fixed, Earth-centered coordinate system)
-         * @return float vector containing the 9 inputs to feed to the NN
+         * @return double vector containing the 9 inputs to feed to the NN
          * 
          */
 
-        std::vector<float> structInputVector(std::vector<double> x, std::vector<double> v);
+        std::vector<double> structInputVector(std::vector<double> x, std::vector<double> v);
 
         /**
          * @brief Method to compute the absolute velocity of the asteroid 
          * 
          * @param v velocity vector of the astroid (fixed, Earth-centered coordinate system)
-         * @return float absolute velocity of the asteroid
+         * @return double absolute velocity of the asteroid
          */
 
-        float computeVelocity(std::vector<double> v);
+        double computeVelocity(std::vector<double> v);
 
         /**
          * @brief Method to compute the incidence angle of the asteroid
          * 
          * @param x position vector of the astroid (fixed, Earth-centered coordinate system)
          * @param v velocity vector of the astroid (fixed, Earth-centered coordinate system)
-         * @return float incidence angle of asteroid (w.r.t. horizontal), in range [0-90]
+         * @return double incidence angle of asteroid (w.r.t. horizontal), in range [0-90]
          */
 
-        float computeIncidenceAngle(std::vector<double> x, std::vector<double> v);
+        double computeIncidenceAngle(std::vector<double> x, std::vector<double> v);
 
         /**
          * @brief Method to compute the azimuth (PAIR format) of the asteroid
          * 
          * @param x position vector of the astroid (fixed, Earth-centered coordinate system)
          * @param v velocity vector of the astroid (fixed, Earth-centered coordinate system)
-         * @return float azimuth angle, clockwise from North, in range [0-360]
+         * @return double azimuth angle, clockwise from North, in range [0-360]
          */
 
-        float computeAzimuth(std::vector<double> x, std::vector<double> v);
+        double computeAzimuth(std::vector<double> x, std::vector<double> v);
 
         /**
          * @brief Method to transform position vector from cartesian to spherical coordinates
@@ -74,16 +74,16 @@ class Model{
          * @brief Method to normalize the input parameters before feeding the neural network
          * 
          * @param data Input object containing real-scale asteroid properties and trajectories
-         * @return std::vector<float> vector containing normalized asteroid properties and trajectories
+         * @return std::vector<double> vector containing normalized asteroid properties and trajectories
          */
 
-        std::vector<double> normalizeInputs(std::vector<float> data);
+        std::vector<double> normalizeInputs(std::vector<double> data);
 
         /**
          * @brief Method to rescale the neural network output to real-life casualties
          * 
          * @param damageNormalized output of the neural network
-         * @return float real-life casualty radius from the asteroid(s) impacts(s)
+         * @return double real-life casualty radius from the asteroid(s) impacts(s)
          */
 
         double rescaleOutput(double damageNormalized);
@@ -161,7 +161,7 @@ class Model{
         std::vector<double> forwardPropagation(std::vector<double> input);
 
 
-        double evaluateOutput(std::vector<float> data);
+        double evaluateOutput(std::vector<double> data);
 
         /**
          * @brief Method to compute the derivative of the ouput of a neural network w.r.t the inputs
@@ -199,7 +199,7 @@ class Model{
         // Vector of vectors containing all the weights of the neural network
         std::vector<std::vector<double> > _weights;
         // Trajectory and material parameters
-        std::vector<float> _scenarioParameters;
+        std::vector<double> _scenarioParameters;
         // Scaling parameters for normalization of inputs/outputs
         std::vector<std::vector<std::string> > _scalingParameters;
 };
